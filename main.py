@@ -25,8 +25,8 @@ class Main(Helper):
         self.clear_console()
 
         while True:
-            self.choice = input("Was möchten Sie tun? (What would you like to do?) \n1. See saved words\n2. Add a word\n3. Guess German to English translations\n4. Check grammar rules\n5. Quit the program\nEnter your choice: ") # What would you like to do?
-            if self.choice not in ("1", "2", "3", "4", "5"):
+            self.choice = input("Was möchten Sie tun? (What would you like to do?) \n1. See saved words\n2. Add a word\n3. Guess German to English translations\n4. Check grammar rules\n5. Remove a word\n6. Quit the program\nEnter your choice: ") # What would you like to do?
+            if self.choice not in ("1", "2", "3", "4", "5", "6"):
                 print("falsche Wahl (Wrong choice)") #Wrong choice
                 continue
             else: 
@@ -54,7 +54,7 @@ class Choices(Main):
 
             #Adds on an entry string for row in the database
             for entry in data:
-                entry_string = f"Word ID - {entry[0]} | Word in German - {entry[1]} | English translation/word - {entry[2]} | Times correctly guessed - {entry[3]}\n"
+                entry_string = f"Word ID - {entry[0]} | Word in German - {entry[1]} | English translation/word - {entry[2]} | Word tense - {entry[3]} | Grammar - {entry[4]} | Times correctly guessed - {entry[5]}\n"
 
                 #Gets the longest entry_string for surrounding border
                 if len(entry_string) > longest_line_length:
@@ -90,10 +90,36 @@ class Choices(Main):
             else: 
                 print("Try again")
 
+        while True:
+            tense = input("Enter the tense for the word (1st, 2nd, 3rd). If unsure, type unknown: ")
+            if english_word != "":
+                if english_word in ("1st", "2nd", "3rd", "unknown"):
+                    break
+                else:
+                    print("Invalid tense")
+            else: 
+                print("Try again")
+
+        while True:
+            self.clear_console()
+            print("Noun")
+            print("Adverb")
+            print("Adjective")
+            print("Verb")
+            print("Pronoun")
+            print("Preposition")
+            print("Conjunction")
+            print("Interjection")
+            print("Other")
+            print("-----------------------------------------------")
+            grammar = input("Enter the type of grammar this word applies to: ")
+            #HERE
+
+
         database = sqlite3.connect("words.db")
         database_cursor = database.cursor()
 
-        database_cursor.execute("INSERT INTO Words (GermanWord, EnglishTranslation, TimesCorrectlyGuessed) VALUES (?, ?, ?)", (german_word, english_word, 0))
+        database_cursor.execute("INSERT INTO Words (GermanWord, EnglishTranslation, WordTense, Grammar, TimesCorrectlyGuessed) VALUES (?, ?, ?, ?, ?)", (german_word, english_word, , , 0))
 
         database.commit()
         database.close()
@@ -136,7 +162,7 @@ class Choices(Main):
 
 
 
-    def check_grammar_rules(self):
+    def check_grammar_rules(self) -> None:
         print("-----------------------------------------------")
         print("Present tense")
         print("-----------------------------------------------")
@@ -149,6 +175,127 @@ class Choices(Main):
         input("Click enter to continue.")
         print("-----------------------------------------------")
         time.sleep(0.2)
+
+
+    def remove_a_word(self) -> None:
+        database = sqlite3.connect("words.db")
+        database_cursor = database.cursor()
+
+        while True:
+            self.clear_console()
+            print("How would you like to remove a word?")
+            print("1. Remove the word through German")
+            print("2. Remove the word through row numbers")
+            choice = input("Enter your choice: ")
+            
+            if choice not in ("1", "2"):
+                print("falsche Wahl (Wrong choice)")
+                continue
+            
+            else:
+                break
+        
+
+        if choice == "1":
+            self.clear_console()
+            all_words = database_cursor.execute("SELECT GermanWord FROM Words").fetchall()
+
+            while True:
+                self.clear_console()
+                show_all_choice = input("Do you want to see all words in the database? Y/N: ").upper()
+                if show_all_choice not in ("Y", "N", "YES", "NO", "ON", "UES", "YSE"):
+                    print("falsche Wahl (Wrong choice)")
+                    continue
+                else:
+                    if show_all_choice in ("Y", "N", "YES", "UES", "YSE"):
+                        print("------------------------")
+                        print("Words in database: ")
+                        print("------------------------")
+                        for tuple in all_words:
+                            print(tuple[0]) #Prints every word
+
+                        print("------------------------")
+                    break
+            
+
+            
+            
+
+        #     print(all_words)
+
+            all_words_list = []
+
+            #Adds each word to a list of words to check if entry is valid
+            for tuple in all_words:
+                all_words_list.append(tuple[0])
+
+            while True:
+                word_to_delete = input("Enter the German word for deletion: ")
+
+                if word_to_delete == "exit":
+                    database.close()
+                    self.menu_choices()
+
+                if word_to_delete not in all_words_list:
+                    print(f"{word_to_delete} is not in the database. Try entering another or type 'exit' to exit.")
+                
+                else:
+                    database_cursor.execute("DELETE FROM Words WHERE GermanWord = (?)", (word_to_delete,))
+                    break
+            
+            print("Successfully deleted!")
+                    
+
+        elif choice == "2":
+            self.clear_console()
+            #### See all words but with no database closure ######################
+            data = database_cursor.execute("SELECT * FROM Words").fetchall()
+            valid_ids = []
+            display_string = ""
+            longest_line_length = 0
+
+            #Adds on an entry string for row in the database
+            for entry in data:
+                valid_ids.append(str(entry[0]))
+                entry_string = f"Word ID - {entry[0]} | Word in German - {entry[1]} | English translation/word - {entry[2]} | Times correctly guessed - {entry[3]}\n"
+
+                #Gets the longest entry_string for surrounding border
+                if len(entry_string) > longest_line_length:
+                    longest_line_length = len(entry_string)
+
+                display_string += entry_string
+
+            #Displays the final string for the user
+            number_of_hyphens = "-" * longest_line_length
+
+            print(number_of_hyphens + "\n" + display_string + number_of_hyphens)
+            #######################################################################
+
+            
+            while True:
+                id_for_deletion = input("Enter an ID for deletion: ")
+
+                if id_for_deletion == "exit":
+                    database.close()
+                    self.menu_choices()
+
+                if id_for_deletion not in valid_ids:
+                    print(f"That entry ({id_for_deletion}) was invalid. Try again or type 'exit' to exit.")
+                
+                else:
+                    database_cursor.execute("DELETE FROM Words WHERE WordID = (?)", (id_for_deletion,))
+                    break
+
+                
+            print("Successfully deleted!")
+                    
+        
+
+        database.commit()
+        database.close()
+
+        time.sleep(0.5)
+
 
     #Matches the choices with a function
     def choice_matcher(self):
@@ -168,6 +315,9 @@ class Choices(Main):
             self.check_grammar_rules()
 
         elif self.choice == "5":
+            self.remove_a_word()
+
+        elif self.choice == "6":
 #             print("""
 #      _____ 
 #     /     | | | | | 

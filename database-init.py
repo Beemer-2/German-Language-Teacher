@@ -6,7 +6,10 @@ database_cursor.execute("""CREATE TABLE Words (
                               WordID INTEGER PRIMARY KEY AUTOINCREMENT,
                               GermanWord TEXT NOT NULL UNIQUE,
                               EnglishTranslation TEXT NOT NULL,
-                              TimesCorrectlyGuessed INTEGER NOT NULL
+                              WordTense TEXT NOT NULL,
+                              Grammar TEXT NOT NULL,  
+                              TimesCorrectlyGuessed INTEGER NOT NULL,
+                              Notes TEXT
                               )
                               """)
 
